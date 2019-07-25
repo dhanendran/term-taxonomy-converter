@@ -109,7 +109,6 @@ class D9_Term_Taxonomy_Converter {
 		$details = $this->taxes[ $tax ];
 
 		echo '<br class="clear" />';
-
 		if ( $num > 0 ) {
 			echo '<h2>' . __( 'Convert or Copy '.$details->label, 'd9_ttc' ) . '</h2>';
 			echo '<div class="narrow">';
@@ -129,16 +128,16 @@ class D9_Term_Taxonomy_Converter {
 			var checkflag = "false";
 			function check_all_rows() {
 				field = document.term_list;
-				if ( 'false' == checkflag ) {
+				if ( 'false' === checkflag ) {
 					for ( i = 0; i < field.length; i++ ) {
-						if ( 'terms_to_convert[]' == field[i].name )
+						if ( 'terms_to_convert[]' === field[i].name )
 							field[i].checked = true;
 					}
 					checkflag = 'true';
 					return '<?php _e('Uncheck All', 'd9_ttc') ?>';
 				} else {
 					for ( i = 0; i < field.length; i++ ) {
-						if ( 'terms_to_convert[]' == field[i].name )
+						if ( 'terms_to_convert[]' === field[i].name )
 							field[i].checked = false;
 					}
 					checkflag = 'false';
@@ -194,7 +193,7 @@ class D9_Term_Taxonomy_Converter {
 			</ul>
 			<?php
 			if ( ! empty( $this->hybrids_ids ) )
-				echo '<p><a name="note"></a>' . __( '* This term is already in another taxonomy, converting will add the new taxonomy term to existing posts in that taxonomy.', 'd9_ttc' ) . '</p>'; ?>
+				echo '<p>' . __( '* This term is already in another taxonomy, converting will add the new taxonomy term to existing posts in that taxonomy.', 'd9_ttc' ) . '</p>'; ?>
 
 			<p class="submit">
 				<input type="submit" name="submit" class="button button-primary" value="<?php esc_attr_e('Go!', 'd9_ttc' ); ?>" />
@@ -248,12 +247,9 @@ class D9_Term_Taxonomy_Converter {
 			$c_label = 'Copy';
 
 		$new_taxes = $_POST['taxes'];
-		//$num = count($new_taxes);
 
-		//$hier = _get_term_hierarchy($tax);
 		$hybrid_cats = $clear_parents = $parents = false;
 		$clean_term_cache = array();
-		//$default_cat = get_option('default_category');
 
 		echo '<ul>';
 
@@ -311,7 +307,7 @@ class D9_Term_Taxonomy_Converter {
 
 					// Convert term
 					if ( $convert ) {
-						$del = wp_delete_term( $term_id, $tax );
+						wp_delete_term( $term_id, $tax );
 
 						// Set all parents to 0 (root-level) if their parent was the converted tag
 						$wpdb->update( $wpdb->term_taxonomy, array( 'parent' => 0 ), array( 'parent' => $term_id, 'taxonomy' => $tax ) );
@@ -319,6 +315,10 @@ class D9_Term_Taxonomy_Converter {
 						if ( $parents ) $clear_parents = true;
 						$clean_cat_cache[] = $term->term_id;
 					}
+
+					// Update term post count.
+					wp_update_term_count_now( array( $id ), $new_tax );
+
 					echo __( $c_label.' successful.', 'd9_ttc' ) . "</li>\n";
 				}
 			}
