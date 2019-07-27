@@ -37,7 +37,7 @@ class D9_Term_Taxonomy_Converter {
 	}
 
 	public function add_menu() {
-		add_submenu_page( 'tools.php', __( 'Term Taxonomy Converter', 'd9_ttc' ), __( 'Term Taxonomy Converter', 'd9_ttc' ), 'manage_options', 'term_tax_converter', array( $this, 'page' ) );
+		add_submenu_page( 'tools.php', esc_html__( 'Term Taxonomy Converter', 'd9_ttc' ), esc_html__( 'Term Taxonomy Converter', 'd9_ttc' ), 'manage_options', 'term_tax_converter', array( $this, 'page' ) );
 	}
 
 	public function header( $current = 'category' ) {
@@ -85,8 +85,8 @@ class D9_Term_Taxonomy_Converter {
 	}
 
 	public function page() {
-		$tax = ( isset( $_GET['tax'] ) ) ? $_GET['tax'] : 'category';
-		$step = ( isset( $_GET['step'] ) ) ? (int) $_GET['step'] : 1;
+		$tax = ( isset( $_GET['tax'] ) ) ? sanitize_text_field( $_GET['tax'] ) : 'category';
+		$step = ( isset( $_GET['step'] ) ) ? (int) sanitize_text_field( $_GET['step'] ) : 1;
 
 		echo '<br class="clear" />';
 
@@ -110,14 +110,14 @@ class D9_Term_Taxonomy_Converter {
 
 		echo '<br class="clear" />';
 		if ( $num > 0 ) {
-			echo '<h2>' . __( 'Convert or Copy '.$details->label, 'd9_ttc' ) . '</h2>';
+			echo '<h2>' . esc_html__( 'Convert or Copy '.$details->label, 'd9_ttc' ) . '</h2>';
 			echo '<div class="narrow">';
-			echo '<p>' . __( 'Here you can selectively copy or convert existing terms from one taxonomy to another. To get started, choose the original taxonomy (above), choose option to copy or convert, select the terms (below), then click the Go button.', 'd9_ttc' ) . '</p>';
-			echo '<p>' . __( 'NOTE: "converted" terms are removed from original taxonomy, and if you convert a term with children, the children become top-level orphans.', 'd9_ttc' ) . '</p></div>';
+			echo '<p>' . esc_html__( 'Here you can selectively copy or convert existing terms from one taxonomy to another. To get started, choose the original taxonomy (above), choose option to copy or convert, select the terms (below), then click the Go button.', 'd9_ttc' ) . '</p>';
+			echo '<p>' . esc_html__( 'NOTE: "converted" terms are removed from original taxonomy, and if you convert a term with children, the children become top-level orphans.', 'd9_ttc' ) . '</p></div>';
 
 			$this->terms_form( $tax );
 		} else {
-			echo '<p>'.__( 'You have no terms to convert', 'd9_ttc' ).'</p>';
+			echo '<p>' . esc_html__( 'You have no terms to convert', 'd9_ttc' ) . '</p>';
 		}
 	}
 
@@ -193,7 +193,7 @@ class D9_Term_Taxonomy_Converter {
 			</ul>
 			<?php
 			if ( ! empty( $this->hybrids_ids ) )
-				echo '<p>' . __( '* This term is already in another taxonomy, converting will add the new taxonomy term to existing posts in that taxonomy.', 'd9_ttc' ) . '</p>'; ?>
+				echo '<p>' . esc_html__( '* This term is already in another taxonomy, converting will add the new taxonomy term to existing posts in that taxonomy.', 'd9_ttc' ) . '</p>'; ?>
 
 			<p class="submit">
 				<input type="submit" name="submit" class="button button-primary" value="<?php esc_attr_e('Go!', 'd9_ttc' ); ?>" />
@@ -229,24 +229,24 @@ class D9_Term_Taxonomy_Converter {
                 && empty( $this->terms_to_convert ) || ( ! isset( $_POST['taxes'] ) )
         ) { ?>
             <div class="narrow">
-                <p><?php printf( __( 'Uh, oh. Something didn&#8217;t work. Please <a href="%s">try again</a>.', 'd9_ttc' ), 'tools.php?page=term_tax_converter&amp;tax=' . $tax ); ?></p>
+                <p><?php printf( __( 'Uh, oh. Something didn&#8217;t work. Please <a href="%s">try again</a>.', 'd9_ttc' ), esc_attr( 'tools.php?page=term_tax_converter&amp;tax=' . $tax ) ); ?></p>
             </div>
 			<?php
             return;
 		}
 
 		if ( empty( $this->terms_to_convert ) )
-			$this->terms_to_convert = $_POST['terms_to_convert'];
+			$this->terms_to_convert = filter_input( INPUT_POST, 'terms_to_convert', FILTER_SANITIZE_STRING, FILTER_REQUIRE_ARRAY );
 
 		$taxonomy = $this->taxes[ $tax ];
 
-		$convert = $_POST['convert'];
+		$convert = sanitize_text_field( $_POST['convert'] );
 		if ( $convert )
 			$c_label = 'Convert';
 		else
 			$c_label = 'Copy';
 
-		$new_taxes = $_POST['taxes'];
+		$new_taxes = filter_input( INPUT_POST, 'taxes', FILTER_SANITIZE_STRING, FILTER_REQUIRE_ARRAY );
 
 		$hybrid_cats = $clear_parents = $parents = false;
 		$clean_term_cache = array();
@@ -259,12 +259,12 @@ class D9_Term_Taxonomy_Converter {
 
 			// check if the term exists in the current taxonomy (it always should!)
 			if ( empty( $exists ) ) {
-				echo '<li>' . sprintf( __( 'Term %s doesn&#8217;t exist in '.$taxonomy->label.'!', 'd9_ttc' ),  $term_id ) . "</li>\n";
+				echo '<li>' . sprintf( esc_html__( 'Term %s doesn&#8217;t exist in ' . $taxonomy->label . '!', 'd9_ttc' ),  $term_id ) . "</li>\n";
 			} else {
 				// if the term exist do the copy/convert
 				// $term is the existing term
 				$term = get_term( $term_id, $tax );
-				echo '<li>' . sprintf( __( $c_label . 'ing term <strong>%s</strong> ... ', 'd9_ttc'),  $term->name );
+				echo '<li>' . sprintf( __( $c_label . 'ing term <strong>%s</strong> ... ', 'd9_ttc'), esc_attr( $term->name ) );
 
 				// repeat process for each new taxonomy selected
 				foreach ( $new_taxes as $new_tax ) {
@@ -295,7 +295,7 @@ class D9_Term_Taxonomy_Converter {
 						$wpdb->query( "INSERT INTO $wpdb->term_relationships (object_id, term_taxonomy_id, term_order ) VALUES " . join( ',', $values ) . " ON DUPLICATE KEY UPDATE term_order = VALUES( term_order )");
 						$wpdb->update( $wpdb->term_taxonomy, array( 'count' => $term->count ), array( 'term_id' => $term->term_id, 'taxonomy' => $new_tax ) );
 
-						echo __( 'Term added to posts. ', 'd9_ttc' );
+						esc_html_e( 'Term added to posts. ', 'd9_ttc' );
 
 						if ( ! $convert ) {
 							$hybrid_cats = true;
@@ -319,7 +319,8 @@ class D9_Term_Taxonomy_Converter {
 					// Update term post count.
 					wp_update_term_count_now( array( $id ), $new_tax );
 
-					echo __( $c_label.' successful.', 'd9_ttc' ) . "</li>\n";
+					esc_html_e( $c_label.' successful.', 'd9_ttc' );
+					echo "</li>\n";
 				}
 			}
 		}
@@ -333,8 +334,8 @@ class D9_Term_Taxonomy_Converter {
 		if ( $clear_parents ) delete_option('category_children');
 
 		if ( $hybrid_cats )
-			echo '<p>' . __( '* This term is now in multiple taxonomies. The converter has added the new term to all posts with the original taxonomy term.', 'd9_ttc' ) . '</p>';
-		echo '<p>' . sprintf( __( '<a href="%s">Convert More...</a>.', 'd9_ttc'), 'tools.php?page=term_tax_converter' ) . '</p>';
+			echo '<p>' . esc_html__( '* This term is now in multiple taxonomies. The converter has added the new term to all posts with the original taxonomy term.', 'd9_ttc' ) . '</p>';
+		echo '<p>' . sprintf( __( '<a href="%s">Convert More...</a>.', 'd9_ttc'), esc_attr( 'tools.php?page=term_tax_converter' ) ) . '</p>';
 	}
 
 }
