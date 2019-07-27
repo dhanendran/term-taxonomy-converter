@@ -1,4 +1,5 @@
 === Term Taxonomy Converter ===
+
 Contributors: dhanendran
 Tags: importer, converter, copy, duplicate, categories and tags converter, taxonomy converter, copy taxonomies, duplicate taxonomies, terms
 Requires at least: 3.0
@@ -20,9 +21,9 @@ This plugin, allows you to copy (duplicate) or convert (move) terms from one tax
 
 == Installation ==
 
-1. Upload the `term-taxonomy-converter` folder to the `/wp-content/plugins/` directory, or search for Taxonomy Converter on the `Plugins > Add New` admin page and Install Now.
+1. Upload the `term-taxonomy-converter` folder to the `/wp-content/plugins/` directory, or search for Term Taxonomy Converter on the `Plugins > Add New` admin page and Install Now.
 2. Activate the plugin through the 'Plugins' menu in WordPress.
-3. Go to the Tools -> Import screen, Click on Term Taxonomy Converter
+3. Go to the Tools -> Term Taxonomy Converter
 
 == Changelog ==
 
