@@ -329,7 +329,7 @@ class D9_Term_Taxonomy_Converter {
 						$wpdb->update( $wpdb->term_taxonomy, array( 'parent' => 0 ), array( 'parent' => $term_id, 'taxonomy' => $tax ) );
 
 						if ( $parents ) $clear_parents = true;
-						$clean_cat_cache[] = $term->term_id;
+						$clean_term_cache[] = $term->term_id;
 					}
 
 					// Update term post count.
