@@ -282,6 +282,18 @@ class D9_Term_Taxonomy_Converter {
 						continue;
 					}
 
+					// If the original term has term meta, copy them over.
+					$original_term_meta = get_term_meta( $term->term_id );
+					foreach ( $original_term_meta as $key => $meta_values ) {
+						foreach ( $meta_values as $value ) {
+							$unserialized_value = @unserialize( $value );
+							if ( false !== $unserialized_value ) {
+								$value = $unserialized_value;
+							}
+							update_term_meta( $id['term_id'], $key, $value );
+						}
+					}
+
 					// if the original term has posts, assign them to the new term
 					$id = $id['term_taxonomy_id'];
 					$posts = get_objects_in_term( $term->term_id, $tax );
