@@ -264,14 +264,17 @@ class D9_Term_Taxonomy_Converter {
 				// if the term exist do the copy/convert
 				// $term is the existing term
 				$term = get_term( $term_id, $tax );
+
+				// If the original term has a term description, copy it over.
+				$description = get_term_field( 'description', $term->term_id, $term->taxonomy, 'db' );
+
 				echo '<li>' . sprintf( __( $c_label . 'ing term <strong>%s</strong> ... ', 'd9_ttc'), esc_attr( $term->name ) );
 
 				// repeat process for each new taxonomy selected
 				foreach ( $new_taxes as $new_tax ) {
-
 					// check if the term is already in the new taxonomy & if not create it
 					if ( ! ( $id = term_exists( $term->slug, $new_tax ) ) )
-						$id = wp_insert_term( $term->name, $new_tax, array( 'slug' => $term->slug ) );
+						$id = wp_insert_term( $term->name, $new_tax, array( 'slug' => $term->slug, 'description' => $description ) );
 
 					// if the term couldn't be created return the error message
 					if ( is_wp_error( $id ) ) {
@@ -279,11 +282,24 @@ class D9_Term_Taxonomy_Converter {
 						continue;
 					}
 
+					// If the original term has term meta, copy them over.
+					$original_term_meta = get_term_meta( $term->term_id );
+					foreach ( $original_term_meta as $key => $meta_values ) {
+						foreach ( $meta_values as $value ) {
+							$unserialized_value = @unserialize( $value );
+							if ( false !== $unserialized_value ) {
+								$value = $unserialized_value;
+							}
+							update_term_meta( $id['term_id'], $key, $value );
+						}
+					}
+
 					// if the original term has posts, assign them to the new term
 					$id = $id['term_taxonomy_id'];
 					$posts = get_objects_in_term( $term->term_id, $tax );
 					$term_order = 0;
 
+					$values = array();
 					foreach ( $posts as $post ) {
 						$type = get_post_type( $post );
 						if ( in_array( $type, $taxonomy->object_type ) )
@@ -313,7 +329,7 @@ class D9_Term_Taxonomy_Converter {
 						$wpdb->update( $wpdb->term_taxonomy, array( 'parent' => 0 ), array( 'parent' => $term_id, 'taxonomy' => $tax ) );
 
 						if ( $parents ) $clear_parents = true;
-						$clean_cat_cache[] = $term->term_id;
+						$clean_term_cache[] = $term->term_id;
 					}
 
 					// Update term post count.
