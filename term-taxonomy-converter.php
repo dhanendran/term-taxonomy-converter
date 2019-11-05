@@ -299,6 +299,7 @@ class D9_Term_Taxonomy_Converter {
 					$posts = get_objects_in_term( $term->term_id, $tax );
 					$term_order = 0;
 
+					$values = array();
 					foreach ( $posts as $post ) {
 						$type = get_post_type( $post );
 						if ( in_array( $type, $taxonomy->object_type ) )
