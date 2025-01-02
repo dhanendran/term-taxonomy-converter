@@ -10,7 +10,7 @@
  * Plugin URI:        https://github.com/dhanendran/term-taxonomy-converter
  * Description:       Copy or convert terms between taxonomies. This plugin, allows you to copy (duplicate) or convert (move) terms from one taxonomy to another or to multiple taxonomies, while maintaining associated posts.
  * Tags:              importer, converter, copy, duplicate, categories and tags converter, taxonomy converter, copy taxonomies, duplicate taxonomies, terms
- * Version:           1.0
+ * Version:           1.2.1
  * Author:            Dhanendran
  * Author URI:        http://dhanendranrajagopal.me/
  * License:           GPL-3.0+
@@ -31,7 +31,8 @@ class D9_Term_Taxonomy_Converter {
 	public $taxes = array();
 	public $all_terms = array();
 	public $hybrids_ids = array();
-	
+	public $terms_to_convert = array();
+
 	function __construct() {
 		add_action( 'admin_menu', array( $this, 'add_menu' ) );
 	}
@@ -86,6 +87,10 @@ class D9_Term_Taxonomy_Converter {
 
 	public function page() {
 		$tax = ( isset( $_GET['tax'] ) ) ? sanitize_text_field( $_GET['tax'] ) : 'category';
+		// Validate that the taxonomy exists
+		if (!taxonomy_exists($tax)) {
+			$tax = 'category'; // Fallback to default if invalid
+		}
 		$step = ( isset( $_GET['step'] ) ) ? (int) sanitize_text_field( $_GET['step'] ) : 1;
 
 		echo '<br class="clear" />';
@@ -225,18 +230,18 @@ class D9_Term_Taxonomy_Converter {
 		global $wpdb;
 
 		if (
-		        ( ! isset( $_POST['terms_to_convert' ] ) || ! is_array( $_POST['terms_to_convert'] ) )
-                && empty( $this->terms_to_convert ) || ( ! isset( $_POST['taxes'] ) )
-        ) { ?>
-            <div class="narrow">
-                <p><?php printf( __( 'Uh, oh. Something didn&#8217;t work. Please <a href="%s">try again</a>.', 'd9_ttc' ), esc_attr( 'tools.php?page=term_tax_converter&amp;tax=' . $tax ) ); ?></p>
-            </div>
+				( ! isset( $_POST['terms_to_convert' ] ) || ! is_array( $_POST['terms_to_convert'] ) )
+				&& empty( $this->terms_to_convert ) || ( ! isset( $_POST['taxes'] ) )
+		) { ?>
+			<div class="narrow">
+				<p><?php printf( __( 'Uh, oh. Something didn&#8217;t work. Please <a href="%s">try again</a>.', 'd9_ttc' ), esc_attr( 'tools.php?page=term_tax_converter&amp;tax=' . $tax ) ); ?></p>
+			</div>
 			<?php
-            return;
+			return;
 		}
 
 		if ( empty( $this->terms_to_convert ) )
-			$this->terms_to_convert = filter_input( INPUT_POST, 'terms_to_convert', FILTER_SANITIZE_STRING, FILTER_REQUIRE_ARRAY );
+			$this->terms_to_convert = filter_input( INPUT_POST, 'terms_to_convert', FILTER_DEFAULT, FILTER_REQUIRE_ARRAY );
 
 		$taxonomy = $this->taxes[ $tax ];
 
@@ -246,7 +251,7 @@ class D9_Term_Taxonomy_Converter {
 		else
 			$c_label = 'Copy';
 
-		$new_taxes = filter_input( INPUT_POST, 'taxes', FILTER_SANITIZE_STRING, FILTER_REQUIRE_ARRAY );
+		$new_taxes = filter_input( INPUT_POST, 'taxes', FILTER_DEFAULT, FILTER_REQUIRE_ARRAY );
 
 		$hybrid_cats = $clear_parents = $parents = false;
 		$clean_term_cache = array();
@@ -299,7 +304,7 @@ class D9_Term_Taxonomy_Converter {
 
 						if ( ! $convert ) {
 							$hybrid_cats = true;
-						    echo '*';
+							echo '*';
 						}
 						$clean_term_cache[] = $term->term_id;
 					}
